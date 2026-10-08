@@ -1,0 +1,80 @@
+services:
+
+  mysql-africa:
+    image: mysql:8.4
+    container_name: globalshop-mysql-africa
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: globalshop
+      MYSQL_USER: globalshop
+      MYSQL_PASSWORD: globalpass
+    ports:
+      - "3301:3306"
+    volumes:
+      - mysql_africa_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d
+
+  mysql-europe:
+    image: mysql:8.4
+    container_name: globalshop-mysql-europe
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: globalshop
+      MYSQL_USER: globalshop
+      MYSQL_PASSWORD: globalpass
+    ports:
+      - "3302:3306"
+    volumes:
+      - mysql_europe_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d
+
+  mysql-america:
+    image: mysql:8.4
+    container_name: globalshop-mysql-america
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: globalshop
+      MYSQL_USER: globalshop
+      MYSQL_PASSWORD: globalpass
+    ports:
+      - "3303:3306"
+    volumes:
+      - mysql_america_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d
+
+  mysql-asia:
+    image: mysql:8.4
+    container_name: globalshop-mysql-asia
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: globalshop
+      MYSQL_USER: globalshop
+      MYSQL_PASSWORD: globalpass
+    ports:
+      - "3304:3306"
+    volumes:
+      - mysql_asia_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d
+
+  router:
+    build:
+      context: ./router
+    container_name: globalshop-router
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql-africa
+      - mysql-europe
+      - mysql-america
+      - mysql-asia
+
+volumes:
+  mysql_africa_data:
+  mysql_europe_data:
+  mysql_america_data:
+  mysql_asia_data:
