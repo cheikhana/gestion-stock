@@ -1,25 +1,7 @@
-# Python
 __pycache__/
-*.py[cod]
-*.pyo
+*.pyc
 .venv/
-venv/
-env/
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Environment / secrets
 .env
-.env.*
-
-# MySQL local data
-mysql_data/
+.idea/
+.vscode/
+*.log

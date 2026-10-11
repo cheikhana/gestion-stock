@@ -1,0 +1,117 @@
+{
+  "run_id": "471fe2",
+  "api": "http://127.0.0.1:8000",
+  "functional": {
+    "placement": {
+      "asia": 3,
+      "europe": 3,
+      "america": 3,
+      "africa": 3
+    },
+    "catalogue_count": 12
+  },
+  "load": {
+    "requests": 100,
+    "stock": 20,
+    "accepted": 20,
+    "refused": 80,
+    "other": 0,
+    "duration_s": 2.321,
+    "throughput_rps": 43.1,
+    "latency_ms": {
+      "p50": 1854,
+      "p95": 2178,
+      "max": 2195
+    },
+    "final_stock": 0,
+    "orders_in_db": 20
+  },
+  "chaos": {
+    "target_shard": "europe",
+    "killed": "globalshop-europe-primary",
+    "workers": 20,
+    "stock": 5000,
+    "http_codes": {
+      "200": 724,
+      "500": 1,
+      "503": 84
+    },
+    "acknowledged": 724,
+    "in_database": 724,
+    "acknowledged_but_lost": 0,
+    "committed_but_unacknowledged": 0,
+    "write_outage_seconds": 8.0,
+    "failover_detected_at_s": 13.545975685119629,
+    "kill_at_s": 5.1,
+    "new_primary": "mysql-europe-replica",
+    "stock_invariant_ok": true,
+    "old_primary_final_status": "NEEDS_RESYNC",
+    "events": [
+      {
+        "time": "2026-10-11T12:00:08.725+00:00",
+        "shard": "asia",
+        "message": "réplique mysql-asia-replica rattachée à mysql-asia-primary (tentative 1)"
+      },
+      {
+        "time": "2026-10-11T12:00:08.776+00:00",
+        "shard": "africa",
+        "message": "réplique mysql-africa-replica rattachée à mysql-africa-primary (tentative 1)"
+      },
+      {
+        "time": "2026-10-11T12:00:08.787+00:00",
+        "shard": "europe",
+        "message": "réplique mysql-europe-replica rattachée à mysql-europe-primary (tentative 1)"
+      },
+      {
+        "time": "2026-10-11T12:00:08.788+00:00",
+        "shard": "america",
+        "message": "réplique mysql-america-replica rattachée à mysql-america-primary (tentative 1)"
+      },
+      {
+        "time": "2026-10-11T12:00:09.595+00:00",
+        "shard": "asia",
+        "message": "réplication saine (mysql-asia-replica <- mysql-asia-primary)"
+      },
+      {
+        "time": "2026-10-11T12:00:09.599+00:00",
+        "shard": "europe",
+        "message": "réplication saine (mysql-europe-replica <- mysql-europe-primary)"
+      },
+      {
+        "time": "2026-10-11T12:00:09.601+00:00",
+        "shard": "america",
+        "message": "réplication saine (mysql-america-replica <- mysql-america-primary)"
+      },
+      {
+        "time": "2026-10-11T12:00:09.605+00:00",
+        "shard": "africa",
+        "message": "réplication saine (mysql-africa-replica <- mysql-africa-primary)"
+      },
+      {
+        "time": "2026-10-11T12:00:39.634+00:00",
+        "shard": "europe",
+        "message": "primaire mysql-europe-primary injoignable (sonde 1/3)"
+      },
+      {
+        "time": "2026-10-11T12:00:43.069+00:00",
+        "shard": "europe",
+        "message": "FAILOVER: primaire mysql-europe-primary injoignable -> promotion de mysql-europe-replica"
+      },
+      {
+        "time": "2026-10-11T12:00:43.180+00:00",
+        "shard": "europe",
+        "message": "FAILOVER TERMINÉ: nouveau primaire = mysql-europe-replica (écritures rouvertes)"
+      },
+      {
+        "time": "2026-10-11T12:00:58.934+00:00",
+        "shard": "europe",
+        "message": "réplique mysql-europe-primary rattachée à mysql-europe-replica (tentative 1)"
+      },
+      {
+        "time": "2026-10-11T12:00:59.846+00:00",
+        "shard": "europe",
+        "message": "RÉPLICATION EN ERREUR (mysql-europe-primary): Coordinator stopped because there were error(s) in the worker(s). The most recent failure being: Worker 1 failed executing transaction '9474b087-c569-11f1-993c-aecdb8ff127a:1' at source log mysql-bin. -> resynchronisation manuelle requise"
+      }
+    ]
+  }
+}

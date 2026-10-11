@@ -1,80 +1,230 @@
-services:
+# GlobalShop - cluster MySQL shardé + répliqué (4 shards x [1 primaire + 1 réplique]) + routeur FastAPI
+# Déploiement : docker compose up -d --build
+# Particularités volontaires :
+#  - IDs globalement uniques : auto_increment_increment=4, offset = rang du shard (1..4)
+#    => shard d'un ID = (id - 1) % 4
+#  - Réplication MySQL asynchrone GTID, configurée et supervisée par le routeur (failover automatique)
+#  - restart "no" sur les nœuds MySQL : un `docker kill` (test de chaos) doit RESTER éteint
+#    tant que le test ne le relance pas explicitement.
 
-  mysql-africa:
-    image: mysql:8.4
-    container_name: globalshop-mysql-africa
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: globalshop
-      MYSQL_USER: globalshop
-      MYSQL_PASSWORD: globalpass
+x-mysql: &mysql
+  image: mysql:8.4
+  restart: "no"
+  environment:
+    MYSQL_ROOT_PASSWORD: rootpass
+    MYSQL_INITDB_SKIP_TZINFO: "1"
+  healthcheck:
+    test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+    interval: 5s
+    timeout: 5s
+    retries: 40
+    start_period: 20s
+  networks: [globalshop]
+
+services:
+  mysql-africa-primary:
+    <<: *mysql
+    container_name: globalshop-africa-primary
+    command: >-
+      --server-id=11
+      --auto-increment-increment=4
+      --auto-increment-offset=1
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --log-bin=mysql-bin
+      --max-connections=300
+      --innodb-buffer-pool-size=64M
+      --performance-schema=OFF
     ports:
       - "3301:3306"
     volumes:
-      - mysql_africa_data:/var/lib/mysql
-      - ./init:/docker-entrypoint-initdb.d
+      - mysql_africa_primary_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
 
-  mysql-europe:
-    image: mysql:8.4
-    container_name: globalshop-mysql-europe
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: globalshop
-      MYSQL_USER: globalshop
-      MYSQL_PASSWORD: globalpass
+  mysql-africa-replica:
+    <<: *mysql
+    container_name: globalshop-africa-replica
+    command: >-
+      --server-id=21
+      --auto-increment-increment=4
+      --auto-increment-offset=1
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --log-bin=mysql-bin
+      --max-connections=300
+      --innodb-buffer-pool-size=64M
+      --performance-schema=OFF
+    ports:
+      - "3311:3306"
+    volumes:
+      - mysql_africa_replica_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
+
+  mysql-europe-primary:
+    <<: *mysql
+    container_name: globalshop-europe-primary
+    command: >-
+      --server-id=12
+      --auto-increment-increment=4
+      --auto-increment-offset=2
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --log-bin=mysql-bin
+      --max-connections=300
+      --innodb-buffer-pool-size=64M
+      --performance-schema=OFF
     ports:
       - "3302:3306"
     volumes:
-      - mysql_europe_data:/var/lib/mysql
-      - ./init:/docker-entrypoint-initdb.d
+      - mysql_europe_primary_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
 
-  mysql-america:
-    image: mysql:8.4
-    container_name: globalshop-mysql-america
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: globalshop
-      MYSQL_USER: globalshop
-      MYSQL_PASSWORD: globalpass
+  mysql-europe-replica:
+    <<: *mysql
+    container_name: globalshop-europe-replica
+    command: >-
+      --server-id=22
+      --auto-increment-increment=4
+      --auto-increment-offset=2
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --log-bin=mysql-bin
+      --max-connections=300
+      --innodb-buffer-pool-size=64M
+      --performance-schema=OFF
+    ports:
+      - "3312:3306"
+    volumes:
+      - mysql_europe_replica_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
+
+  mysql-america-primary:
+    <<: *mysql
+    container_name: globalshop-america-primary
+    command: >-
+      --server-id=13
+      --auto-increment-increment=4
+      --auto-increment-offset=3
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --log-bin=mysql-bin
+      --max-connections=300
+      --innodb-buffer-pool-size=64M
+      --performance-schema=OFF
     ports:
       - "3303:3306"
     volumes:
-      - mysql_america_data:/var/lib/mysql
-      - ./init:/docker-entrypoint-initdb.d
+      - mysql_america_primary_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
 
-  mysql-asia:
-    image: mysql:8.4
-    container_name: globalshop-mysql-asia
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: globalshop
-      MYSQL_USER: globalshop
-      MYSQL_PASSWORD: globalpass
+  mysql-america-replica:
+    <<: *mysql
+    container_name: globalshop-america-replica
+    command: >-
+      --server-id=23
+      --auto-increment-increment=4
+      --auto-increment-offset=3
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --log-bin=mysql-bin
+      --max-connections=300
+      --innodb-buffer-pool-size=64M
+      --performance-schema=OFF
+    ports:
+      - "3313:3306"
+    volumes:
+      - mysql_america_replica_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
+
+  mysql-asia-primary:
+    <<: *mysql
+    container_name: globalshop-asia-primary
+    command: >-
+      --server-id=14
+      --auto-increment-increment=4
+      --auto-increment-offset=4
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --log-bin=mysql-bin
+      --max-connections=300
+      --innodb-buffer-pool-size=64M
+      --performance-schema=OFF
     ports:
       - "3304:3306"
     volumes:
-      - mysql_asia_data:/var/lib/mysql
-      - ./init:/docker-entrypoint-initdb.d
+      - mysql_asia_primary_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
+
+  mysql-asia-replica:
+    <<: *mysql
+    container_name: globalshop-asia-replica
+    command: >-
+      --server-id=24
+      --auto-increment-increment=4
+      --auto-increment-offset=4
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --log-bin=mysql-bin
+      --max-connections=300
+      --innodb-buffer-pool-size=64M
+      --performance-schema=OFF
+    ports:
+      - "3314:3306"
+    volumes:
+      - mysql_asia_replica_data:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d:ro
 
   router:
-    build:
-      context: ./router
+    build: ./router
     container_name: globalshop-router
     restart: unless-stopped
+    environment:
+      DB_USER: globalshop
+      DB_PASSWORD: globalpass
+      DB_NAME: globalshop
+      ROOT_PASSWORD: rootpass
+      REPL_USER: repl
+      REPL_PASSWORD: replpass
+      AUTO_FAILOVER: "true"
+      FAILOVER_THRESHOLD: "3"
+      MONITOR_INTERVAL: "1.0"
+      PROBE_TIMEOUT: "2"
     ports:
       - "8000:8000"
     depends_on:
-      - mysql-africa
-      - mysql-europe
-      - mysql-america
-      - mysql-asia
+      mysql-africa-primary:
+        condition: service_healthy
+      mysql-africa-replica:
+        condition: service_healthy
+      mysql-europe-primary:
+        condition: service_healthy
+      mysql-europe-replica:
+        condition: service_healthy
+      mysql-america-primary:
+        condition: service_healthy
+      mysql-america-replica:
+        condition: service_healthy
+      mysql-asia-primary:
+        condition: service_healthy
+      mysql-asia-replica:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [globalshop]
+
+networks:
+  globalshop:
+    name: globalshop
 
 volumes:
-  mysql_africa_data:
-  mysql_europe_data:
-  mysql_america_data:
-  mysql_asia_data:
+  mysql_africa_primary_data:
+  mysql_africa_replica_data:
+  mysql_europe_primary_data:
+  mysql_europe_replica_data:
+  mysql_america_primary_data:
+  mysql_america_replica_data:
+  mysql_asia_primary_data:
+  mysql_asia_replica_data:

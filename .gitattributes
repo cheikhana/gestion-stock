@@ -1,0 +1,7 @@
+# Évite que Git sous Windows convertisse les scripts en CRLF (cassant sh/Docker)
+* text=auto
+*.sh  text eol=lf
+*.py  text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf
+Dockerfile text eol=lf
